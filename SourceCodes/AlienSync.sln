@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Scp", "AlienSync.Scp\AlienSync.Scp.csproj", "{5FEEBBB7-848F-4D42-ACF2-FAF811DCA793}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Core", "AlienSync.Core\AlienSync.Core.csproj", "{D74E9847-CED0-40CA-A25A-7195E2F80205}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Core.Test", "AlienSync.Core.Test\AlienSync.Core.Test.csproj", "{D6FC5052-A42B-42B8-9B90-40B3DD314621}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{99828DD7-C957-4532-BC89-CE572AA4BDFC}"
+	ProjectSection(SolutionItems) = preProject
+		..\Libraries\WinSCP\winscp514\WinSCP.exe = ..\Libraries\WinSCP\winscp514\WinSCP.exe
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Git", "AlienSync.Git\AlienSync.Git.csproj", "{C7CF0646-EDBA-4E86-B607-A8A8E879C791}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FEEBBB7-848F-4D42-ACF2-FAF811DCA793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FEEBBB7-848F-4D42-ACF2-FAF811DCA793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FEEBBB7-848F-4D42-ACF2-FAF811DCA793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FEEBBB7-848F-4D42-ACF2-FAF811DCA793}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D74E9847-CED0-40CA-A25A-7195E2F80205}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D74E9847-CED0-40CA-A25A-7195E2F80205}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D74E9847-CED0-40CA-A25A-7195E2F80205}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D74E9847-CED0-40CA-A25A-7195E2F80205}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6FC5052-A42B-42B8-9B90-40B3DD314621}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6FC5052-A42B-42B8-9B90-40B3DD314621}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6FC5052-A42B-42B8-9B90-40B3DD314621}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6FC5052-A42B-42B8-9B90-40B3DD314621}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
