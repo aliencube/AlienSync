@@ -1,4 +1,8 @@
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
+[Bb]uild/[Aa]lien[Ss]ync.[Ss]cp/
+[Bb]uild/[Aa]lien[Ss]ync.[Gg]it/
+[Bb]uild/[Aa]lien[Ss]ync.[Hh]g/
+
 [Bb]in/
 [Oo]bj/
 
@@ -77,6 +81,7 @@ publish
 
 # Publish Web Output
 *.Publish.xml
+*.pubxml
 
 # NuGet Packages Directory
 packages
