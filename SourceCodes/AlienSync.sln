@@ -7,11 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Core", "AlienSync
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Core.Test", "AlienSync.Core.Test\AlienSync.Core.Test.csproj", "{D6FC5052-A42B-42B8-9B90-40B3DD314621}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{99828DD7-C957-4532-BC89-CE572AA4BDFC}"
-	ProjectSection(SolutionItems) = preProject
-		..\Libraries\WinSCP\winscp514\WinSCP.exe = ..\Libraries\WinSCP\winscp514\WinSCP.exe
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Git", "AlienSync.Git\AlienSync.Git.csproj", "{C7CF0646-EDBA-4E86-B607-A8A8E879C791}"
 EndProject
 Global
