@@ -72,6 +72,14 @@ namespace AlienSync.Core
 		}
 
 		/// <summary>
+		/// Gets the value that specifies whether SSIS package exists or not.
+		/// </summary>
+		public bool SsisPackageExists
+		{
+			get { return File.Exists(this.Settings.SsisPackagePath); }
+		}
+
+		/// <summary>
 		/// Gets the value that specifies whether TableDiff is installed or not.
 		/// </summary>
 		public bool TableDiffInstalled
@@ -223,6 +231,10 @@ namespace AlienSync.Core
 		private void ProcessRequestsWithMsSql()
 		{
 			this.OnMsSqlSynchronizationStarted();
+
+			//	Checks whether SSIS package exists or not.
+			if (!this.SsisPackageExists)
+				throw new FileNotFoundException("SSIS package cannot be found at the designated location.");
 
 			//	Checks whether TableDiff has been installed or not.
 			if (!this.TableDiffInstalled)

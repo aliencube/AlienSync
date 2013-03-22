@@ -36,6 +36,7 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(Database.MsSql);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
+
 			int exitCode;
 			using (var process = new Process())
 			{
@@ -47,8 +48,8 @@ namespace AlienSync.Core.Wrappers
 					RedirectStandardOutput = true,
 					Arguments = String.Format(
 						"--git-dir={0} --work-tree={1} commit -a -m \"{2}\"",
-						this.GitDirectoryPath,
-						this.GitWorkTree,
+						this._settings.SsisPackagePath,
+						this._settings.TableDiffExecutablePath,
 						this._settings.GitCommitMessage)
 				};
 				process.StartInfo = psi;

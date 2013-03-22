@@ -295,7 +295,19 @@ namespace AlienSync.Core
 
 		#region For MS-SQL
 		/// <summary>
-		/// Gets the executable path of Git.
+		/// Gets the SSIS package file path.
+		/// </summary>
+		public string SsisPackagePath
+		{
+			get
+			{
+				var path = ConfigurationManager.AppSettings["MsSql.SsisPackagePath"];
+				return path.EndsWith(".dtsx") ? path : String.Empty;
+			}
+		}
+
+		/// <summary>
+		/// Gets the executable path of TableDiff.
 		/// </summary>
 		public string TableDiffExecutablePath
 		{
