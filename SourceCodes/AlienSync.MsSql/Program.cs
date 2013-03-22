@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using AlienSync.Core;
+using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 using AlienSync.Core.Exceptions;
 
@@ -97,13 +98,17 @@ namespace AlienSync.MsSql
 			sync.SynchronizationStarted += Sync_SynchronizationStarted;
 			sync.SynchronizationCompleted += Sync_SynchronizationCompleted;
 
-			sync.ProcessRequests();
-		}
+			sync.MsSqlSynchronizationStarted += Sync_MsSqlSynchronizationStarted;
+			sync.MsSqlSynchronizationCompleted += Sync_MsSqlSynchronizationCompleted;
 
+			sync.ProcessStarted += Sync_ProcessStarted;
+			sync.ProcessCompleted += Sync_ProcessCompleted;
+
+			sync.ProcessRequests(SynchronizationAction.MsSqlOnly);
+		}
 		#endregion
 
 		#region Event Handlers
-
 		/// <summary>
 		/// Occurs when synchronization process is started.
 		/// </summary>
@@ -131,6 +136,61 @@ namespace AlienSync.MsSql
 			Console.WriteLine(message);
 		}
 
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is started.
+		/// </summary>
+		/// <param name="sender">Object that triggers the MS-SQL synchronization started event.</param>
+		/// <param name="e">Provides data for event.</param>
+		private static void Sync_MsSqlSynchronizationStarted(object sender, EventArgs e)
+		{
+			var message = "MS-SQL Synchronization started ...\n";
+			Synchronizer.SaveLogs(message);
+
+			Console.WriteLine(message);
+		}
+
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is started.
+		/// </summary>
+		/// <param name="sender">Object that triggers the MS-SQL synchronization completed event.</param>
+		/// <param name="e">Provides data for event.</param>
+		private static void Sync_MsSqlSynchronizationCompleted(object sender, EventArgs e)
+		{
+			var message = "MS-SQL Synchronization completed!\n";
+			Synchronizer.SaveLogs(message);
+
+			Console.WriteLine(message);
+		}
+
+		/// <summary>
+		/// Occurs when the process is started.
+		/// </summary>
+		/// <param name="sender">Object that triggers the process started event.</param>
+		/// <param name="e">Provides data for event.</param>
+		private static void Sync_ProcessStarted(object sender, ProcessStartedEventArgs e)
+		{
+			var message = String.Format("{0} started ...\n", e.ProcessName);
+			Synchronizer.SaveLogs(message);
+
+			Console.WriteLine(message);
+		}
+
+		/// <summary>
+		/// Occurs when the process is completed.
+		/// </summary>
+		/// <param name="sender">Object that triggers the process started event.</param>
+		/// <param name="e">Provides data for process completed event.</param>
+		private static void Sync_ProcessCompleted(object sender, ProcessCompletedEventArgs e)
+		{
+			var message = new StringBuilder();
+			if (e.ExitCode > 0)
+				message.AppendLine(String.Format("Exit Code: {0}", e.ExitCode));
+			message.AppendLine(String.Format("{0} completed!\n", e.ProcessName));
+
+			Synchronizer.SaveLogs(message.ToString());
+
+			Console.WriteLine(message);
+		}
 		#endregion
 	}
 }

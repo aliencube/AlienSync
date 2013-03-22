@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using WinSCP;
 using AlienSync.Core;
+using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 using AlienSync.Core.Exceptions;
 
@@ -111,7 +112,7 @@ namespace AlienSync.Git
 			sync.ProcessCompleted += Sync_ProcessCompleted;
 			sync.OutputDataReceived += Sync_OutputDataReceived;
 
-			sync.ProcessRequests(true);
+			sync.ProcessRequests(SynchronizationAction.ScpThenGit);
 		}
 		#endregion
 

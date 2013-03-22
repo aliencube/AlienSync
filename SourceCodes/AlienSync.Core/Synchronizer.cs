@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using AlienSync.Core.Enums;
 using WinSCP;
 using AlienSync.Core.Events;
 using AlienSync.Core.Wrappers;
@@ -69,24 +70,51 @@ namespace AlienSync.Core
 		{
 			get { return File.Exists(this.Settings.GitExecutablePath); }
 		}
+
+		/// <summary>
+		/// Gets the value that specifies whether TableDiff is installed or not.
+		/// </summary>
+		public bool TableDiffInstalled
+		{
+			get { return File.Exists(this.Settings.TableDiffExecutablePath); }
+		}
 		#endregion
 
 		#region Methods
 		/// <summary>
 		/// Processes the synchronization requests.
 		/// </summary>
-		/// <param name="includeRepositorySync">Value that specifies whether to include the repository synchronization or not. Default value is <c>False</c>.</param>
-		public void ProcessRequests(bool includeRepositorySync = false)
+		/// <param name="action">Action for synchronization. Default value is <c>SynchronizationAction.ScpOnly</c>.</param>
+		public void ProcessRequests(SynchronizationAction action = SynchronizationAction.ScpOnly)
 		{
 			//	Subscribes the SynchronizationStarted event.
 			this.OnSynchronizationStarted(new SynchronizationStartedEventArgs(DateTime.Now));
 
-			//	Processes the sync through WinSCP.
-			this.ProcessRequestsWithScp();
+			switch (action)
+			{
+				case SynchronizationAction.ScpOnly:
+					//	Processes the sync through WinSCP.
+					this.ProcessRequestsWithScp();
+					break;
+				case SynchronizationAction.ScpThenGit:
+					//	Processes the sync through WinSCP.
+					this.ProcessRequestsWithScp();
 
-			//	Processes the sync with repository.
-			if (includeRepositorySync)
-				this.ProcessRequestsWithRepository();
+					//	Processes the sync through Git.
+					this.ProcessRequestsWithGit();
+					break;
+				case SynchronizationAction.ScpThenHg:
+					//	Processes the sync through WinSCP.
+					this.ProcessRequestsWithScp();
+
+					//	Processes the sync through Hg.
+					this.ProcessRequestsWithHg();
+					break;
+				case SynchronizationAction.MsSqlOnly:
+					//	Processes the sync through MS-SQL.
+					this.ProcessRequestsWithMsSql();
+					break;
+			}
 
 			//	Subscribes the SynchronizationCompleted event.
 			this.OnSynchronizationCompleted(new SynchronizationCompletedEventArgs(DateTime.Now));
@@ -141,22 +169,13 @@ namespace AlienSync.Core
 		}
 
 		/// <summary>
-		/// Processes the synchronization with repository - either Git or Hg.
-		/// </summary>
-		private void ProcessRequestsWithRepository()
-		{
-			//	TO DO: This only processes with Git sync at this stage. Hg will be implemented soon.
-			this.ProcessRequestsWithGit();
-		}
-
-		/// <summary>
 		/// Processes the synchronization requests through Git.
 		/// </summary>
 		private void ProcessRequestsWithGit()
 		{
 			this.OnGitSynchronizationStarted();
 
-			//	Checks whether WinSCP has been installed or not.
+			//	Checks whether Git has been installed or not.
 			if (!this.GitInstalled)
 				throw new FileNotFoundException("Git cannot be found at the designated location.");
 
@@ -193,9 +212,29 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Processes the synchronization requests through Hg.
 		/// </summary>
-		private void ProcessRequestWithHg()
+		private void ProcessRequestsWithHg()
 		{
 			throw new NotImplementedException();
+		}
+
+		/// <summary>
+		/// Processes the synchronization requests through MS-SQL.
+		/// </summary>
+		private void ProcessRequestsWithMsSql()
+		{
+			this.OnMsSqlSynchronizationStarted();
+
+			//	Checks whether TableDiff has been installed or not.
+			if (!this.TableDiffInstalled)
+				throw new FileNotFoundException("TableDiff cannot be found at the designated location.");
+
+			var package = new MsSqlSsisPackageWrapper(this.Settings);
+			package.ProcessStarted += Package_ProcessStarted;
+			package.ProcessCompleted += Package_ProcessCompleted;
+			package.OutputDataReceived += Package_OutputDataReceived;
+
+			package.Start();
+			this.OnMsSqlSynchronizationCompleted();
 		}
 
 		/// <summary>
@@ -289,6 +328,16 @@ namespace AlienSync.Core
 		/// </summary>
 		/// <remarks>This event is used to handle the bubbled up OutputDataReceived event.</remarks>
 		public event EventHandler<AlienSync.Core.Events.OutputDataReceivedEventArgs> OutputDataReceived;
+
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is started.
+		/// </summary>
+		public event EventHandler<EventArgs> MsSqlSynchronizationStarted;
+
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is completed.
+		/// </summary>
+		public event EventHandler<EventArgs> MsSqlSynchronizationCompleted;
 		#endregion
 
 		#region Event Handlers
@@ -425,6 +474,57 @@ namespace AlienSync.Core
 		/// <param name="sender">Object that triggers the output data received event.</param>
 		/// <param name="e">Provides data for output data received event.</param>
 		protected void Repo_OutputDataReceived(object sender, AlienSync.Core.Events.OutputDataReceivedEventArgs e)
+		{
+			if (this.OutputDataReceived != null)
+				this.OutputDataReceived(sender, e);
+		}
+
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is started.
+		/// </summary>
+		protected virtual void OnMsSqlSynchronizationStarted()
+		{
+			if (this.MsSqlSynchronizationStarted != null)
+				this.MsSqlSynchronizationStarted(this, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Occurs when MS-SQL synchronization process is completed.
+		/// </summary>
+		protected virtual void OnMsSqlSynchronizationCompleted()
+		{
+			if (this.MsSqlSynchronizationCompleted != null)
+				this.MsSqlSynchronizationCompleted(this, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Occurs when the process is started.
+		/// </summary>
+		/// <param name="sender">Object that triggers the process started event.</param>
+		/// <param name="e">Provides data for process started event.</param>
+		protected void Package_ProcessStarted(object sender, ProcessStartedEventArgs e)
+		{
+			if (this.ProcessStarted != null)
+				this.ProcessStarted(this, e);
+		}
+
+		/// <summary>
+		/// Occurs when the process is completed.
+		/// </summary>
+		/// <param name="sender">Object that triggers the process started event.</param>
+		/// <param name="e">Provides data for process completed event.</param>
+		protected void Package_ProcessCompleted(object sender, ProcessCompletedEventArgs e)
+		{
+			if (this.ProcessCompleted != null)
+				this.ProcessCompleted(this, e);
+		}
+
+		/// <summary>
+		/// Occurs when the instance receives output stream.
+		/// </summary>
+		/// <param name="sender">Object that triggers the output data received event.</param>
+		/// <param name="e">Provides data for output data received event.</param>
+		protected void Package_OutputDataReceived(object sender, AlienSync.Core.Events.OutputDataReceivedEventArgs e)
 		{
 			if (this.OutputDataReceived != null)
 				this.OutputDataReceived(sender, e);

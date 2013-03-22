@@ -293,6 +293,30 @@ namespace AlienSync.Core
 		
 		#endregion
 
+		#region For MS-SQL
+		/// <summary>
+		/// Gets the executable path of Git.
+		/// </summary>
+		public string TableDiffExecutablePath
+		{
+			get
+			{
+				var path = ConfigurationManager.AppSettings["MsSql.TableDiffExecutablePath"];
+				if (String.IsNullOrEmpty(path))
+				{
+					//	Sets the version of MS-SQL Server 2012.
+					path = @"C:\Program Files\Microsoft SQL Server\110\COM";
+					//	Sets the version of MS-SQL Server 2008.
+					if (!Directory.Exists(path))
+						path = @"C:\Program Files\Microsoft SQL Server\100\COM";
+				}
+				if (!path.ToLower().EndsWith("tablediff.exe"))
+					path = String.Format(@"{0}\tablediff.exe", path.TrimEnd('/', '\\'));
+				return path;
+			}
+		}
+		#endregion
+
 		#endregion
 
 		#region Methods
