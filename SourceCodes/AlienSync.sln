@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Core.Test", "Alie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.Git", "AlienSync.Git\AlienSync.Git.csproj", "{C7CF0646-EDBA-4E86-B607-A8A8E879C791}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienSync.MsSql", "AlienSync.MsSql\AlienSync.MsSql.csproj", "{1159AD14-0911-4085-96A7-D0CF0AD0EFBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7CF0646-EDBA-4E86-B607-A8A8E879C791}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1159AD14-0911-4085-96A7-D0CF0AD0EFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1159AD14-0911-4085-96A7-D0CF0AD0EFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1159AD14-0911-4085-96A7-D0CF0AD0EFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1159AD14-0911-4085-96A7-D0CF0AD0EFBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
