@@ -36,9 +36,12 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(Database.MsSql);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
+			var el = new SsisPackageEventListener();
 			var app = new Application();
-			var package = app.LoadPackage(this._settings.SsisPackagePath, new DefaultEvents());
-			var result = package.Execute();
+			using (var package = app.LoadPackage(this._settings.SsisPackagePath, el))
+			{
+				var result = package.Execute(null, null, el, null, null);
+			}
 
 			int exitCode;
 			using (var process = new Process())

@@ -59,6 +59,7 @@
     <Compile Include="Events\ResultCodeReceivedEventArgs.cs" />
     <Compile Include="Events\DirectorySynchronizationCompletedEventArgs.cs" />
     <Compile Include="Events\DirectorySynchronizationStartedEventArgs.cs" />
+    <Compile Include="Events\SsisPackageEventListener.cs" />
     <Compile Include="Events\SynchronizationCompletedEventArgs.cs" />
     <Compile Include="Events\SynchronizationStartedEventArgs.cs" />
     <Compile Include="Exceptions\InvalidConfigurationException.cs" />
