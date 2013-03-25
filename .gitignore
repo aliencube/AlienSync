@@ -116,3 +116,6 @@ UpgradeLog*.XML
 *.zip
 *.rar
 *.7z
+
+# SourceTree related
+*.stackdump
