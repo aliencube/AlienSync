@@ -243,9 +243,9 @@ namespace AlienSync.Core
 			var package = new MsSqlSsisPackageWrapper(this.Settings);
 			package.ProcessStarted += Package_ProcessStarted;
 			package.ProcessCompleted += Package_ProcessCompleted;
-			package.OutputDataReceived += Package_OutputDataReceived;
+			//package.OutputDataReceived += Package_OutputDataReceived;
 
-			package.Start();
+			package.Execute();
 			this.OnMsSqlSynchronizationCompleted();
 		}
 
