@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Microsoft.SqlServer.Dts.Runtime;
 using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
@@ -28,44 +27,24 @@ namespace AlienSync.Core.Wrappers
 
 		#region Methods
 		/// <summary>
-		/// Commits the change from the working directory to local repository.
+		/// Executes the SSIS package for MS-SQL database synchronization.
 		/// </summary>
 		/// <returns>Returns exit code. For successful execution will return 0.</returns>
-		public int Start()
+		public int Execute()
 		{
 			var processName = Convert.ToString(Database.MsSql);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
+			int exitCode;
 			var el = new SsisPackageEventListener();
 			var app = new Application();
 			using (var package = app.LoadPackage(this._settings.SsisPackagePath, el))
 			{
 				var result = package.Execute(null, null, el, null, null);
+				exitCode = Convert.ToInt32(result);
 			}
 
-			int exitCode;
-			using (var process = new Process())
-			{
-				var psi = new ProcessStartInfo(this._settings.TableDiffExecutablePath)
-				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.GitLocalRepositoryPath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} commit -a -m \"{2}\"",
-						this._settings.SsisPackagePath,
-						this._settings.TableDiffExecutablePath,
-						this._settings.GitCommitMessage)
-				};
-				process.StartInfo = psi;
-				process.Start();
-
-				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
-
-				process.WaitForExit();
-				exitCode = process.ExitCode;
-			}
+			//this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
 			return exitCode;

@@ -295,6 +295,22 @@ namespace AlienSync.Core
 
 		#region For MS-SQL
 		/// <summary>
+		/// Gets the connection strings for MS-SQL source database.
+		/// </summary>
+		public string MsSqlSourceConnection
+		{
+			get { return this.ConnectionStrings["MsSqlSourceConnection"]; }
+		}
+
+		/// <summary>
+		/// Gets the connection strings for MS-SQL destination database.
+		/// </summary>
+		public string MsSqlDestinationConnection
+		{
+			get { return this.ConnectionStrings["MsSqlDestinationConnection"]; }
+		}
+
+		/// <summary>
 		/// Gets the SSIS package file path.
 		/// </summary>
 		public string SsisPackagePath
