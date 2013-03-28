@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 
@@ -23,6 +26,7 @@ namespace AlienSync.Core.Wrappers
 
 		#region Properties
 		private readonly Settings _settings;
+		private List<string> _tableNames;
 		#endregion
 
 		#region Methods
@@ -71,20 +75,23 @@ namespace AlienSync.Core.Wrappers
 			int exitCode;
 			using (var process = new Process())
 			{
-				var query =
-					String.Format(
-						"SELECT t.[name] FROM sys.tables AS t JOIN sys.schemas AS s ON t.schema_id = s.schema_id WHERE s.[name] = '{0}' AND t.[name] <> 'sysdiagrams' ORDER BY t.[name] ASC",
-						this._settings.MsSqlSourceDatabaseSchema);
+				var query = String.Format(
+					"SELECT t.[name] FROM sys.tables AS t JOIN sys.schemas AS s ON t.schema_id = s.schema_id WHERE s.[name] = '{0}' AND t.[name] <> 'sysdiagrams' ORDER BY t.[name] ASC",
+					this._settings.MsSqlSourceDatabaseSchema);
 				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
 					{
 						UseShellExecute = false,
 						WorkingDirectory = this._settings.MsSqlScriptStoragePath,
 						RedirectStandardInput = true,
 						RedirectStandardOutput = true,
-						Arguments =
-							String.Format("-S localhost -U username -P password -d AlienSync_Source -Q \"{0}\" -o \"{1}\\tables.txt\"",
-							              query,
-							              this._settings.MsSqlScriptStoragePath)
+						Arguments = String.Format(
+							"-S {0} -U {1} -P {2} -d {3} -Q \"{4}\" -o \"{5}\\tables.txt\"",
+							this._settings.MsSqlSourceConnection.DataSource,
+							this._settings.MsSqlSourceConnection.UserId,
+							this._settings.MsSqlSourceConnection.Password,
+							this._settings.MsSqlSourceConnection.InitialCatalog,
+							query,
+							this._settings.MsSqlScriptStoragePath)
 					};
 				process.StartInfo = psi;
 				process.Start();
@@ -93,6 +100,16 @@ namespace AlienSync.Core.Wrappers
 
 				process.WaitForExit();
 				exitCode = process.ExitCode;
+			}
+
+			using (var file = File.OpenText(String.Format(@"{0}\tables.txt", this._settings.MsSqlScriptStoragePath)))
+			{
+				var lines = file.ReadToEnd()
+				                .Split(new string[] {"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries)
+				                .Skip(2)
+				                .Where(p => !p.StartsWith("("))
+				                .ToList();
+				this._tableNames = lines;
 			}
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
@@ -108,28 +125,48 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(MsSqlAction.GenerateScripts);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
-			int exitCode;
-			using (var process = new Process())
+			var exitCode = 404;
+			if (this._tableNames != null && this._tableNames.Any())
 			{
-				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				foreach (var tableName in this._tableNames)
 				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
-						"",
-						"",
-						this._settings.GitBranchName)
-				};
-				process.StartInfo = psi;
-				process.Start();
+					using (var process = new Process())
+					{
+						var psi = new ProcessStartInfo(this._settings.MsSqlTableDiffExecutablePath)
+							{
+								UseShellExecute = false,
+								WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+								RedirectStandardInput = true,
+								RedirectStandardOutput = true,
+								Arguments = String.Format(
+									"-sourceserver [{0}] -sourcedatabase [{1}] -sourceschema [{2}] -sourcetable [{3}] -sourceuser [{4}] -sourcepassword [{5}] -destinationserver [{6}] -destinationdatabase [{7}] -destinationschema [{8}] -destinationtable [{9}] -destinationuser [{10}] -destinationpassword [{11}] -dt -et {12} -f \"{13}\\{14}.sql\"",
+									this._settings.MsSqlSourceConnection.DataSource,
+									this._settings.MsSqlSourceConnection.InitialCatalog,
+									this._settings.MsSqlSourceDatabaseSchema,
+									tableName,
+									this._settings.MsSqlSourceConnection.UserId,
+									this._settings.MsSqlSourceConnection.Password,
+									this._settings.MsSqlDestinationConnection.DataSource,
+									this._settings.MsSqlDestinationConnection.InitialCatalog,
+									this._settings.MsSqlDestinationDatabaseSchema,
+									tableName,
+									this._settings.MsSqlDestinationConnection.UserId,
+									this._settings.MsSqlDestinationConnection.Password,
+									"TableDiffs",
+									this._settings.MsSqlScriptStoragePath,
+									tableName)
+							};
+						process.StartInfo = psi;
+						process.Start();
 
-				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+						this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
 
-				process.WaitForExit();
-				exitCode = process.ExitCode;
+						process.WaitForExit();
+						exitCode = process.ExitCode;
+					}
+					if (exitCode > 0)
+						break;
+				}
 			}
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
