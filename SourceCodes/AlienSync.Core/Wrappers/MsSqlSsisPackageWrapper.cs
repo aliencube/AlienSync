@@ -1,21 +1,21 @@
 ﻿using System;
-using Microsoft.SqlServer.Dts.Runtime;
+using System.Diagnostics;
 using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 
 namespace AlienSync.Core.Wrappers
 {
 	/// <summary>
-	/// This represents the MS-SQL SSIS package wrapper entity.
+	/// This represents the MS-SQL wrapper entity.
 	/// </summary>
-	public class MsSqlSsisPackageWrapper
+	public class MsSqlWrapper
 	{
 		#region Constructors
 		/// <summary>
-		/// Initialises a new instance of the MsSqlSsisPackageWrapper object.
+		/// Initialises a new instance of the MsSqlWrapper object.
 		/// </summary>
 		/// <param name="settings">Configuration settings.</param>
-		public MsSqlSsisPackageWrapper(Settings settings)
+		public MsSqlWrapper(Settings settings)
 		{
 			this._settings = settings;
 		}
@@ -27,24 +27,186 @@ namespace AlienSync.Core.Wrappers
 
 		#region Methods
 		/// <summary>
-		/// Executes the SSIS package for MS-SQL database synchronization.
+		/// Clean up the results directory before the process.
 		/// </summary>
 		/// <returns>Returns exit code. For successful execution will return 0.</returns>
-		public int Execute()
+		public int CleanUpDirectory()
 		{
-			var processName = Convert.ToString(Database.MsSql);
+			var processName = Convert.ToString(MsSqlAction.CleanUpDirectory);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
 			int exitCode;
-			var el = new SsisPackageEventListener();
-			var app = new Application();
-			using (var package = app.LoadPackage(this._settings.SsisPackagePath, el))
+			using (var process = new Process())
 			{
-				var result = package.Execute(null, null, el, null, null);
-				exitCode = Convert.ToInt32(result);
+				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				{
+					UseShellExecute = false,
+					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+					RedirectStandardInput = true,
+					RedirectStandardOutput = true,
+					Arguments = String.Format(
+						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
+						"",
+						"",
+						this._settings.GitBranchName)
+				};
+				process.StartInfo = psi;
+				process.Start();
+
+				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
 			}
 
-			//this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+			return exitCode;
+		}
+
+		/// <summary>
+		/// Gets the list of tables for synchronization.
+		/// </summary>
+		/// <returns>Returns exit code. For successful execution will return 0.</returns>
+		public int GetTables()
+		{
+			var processName = Convert.ToString(MsSqlAction.GetTables);
+			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
+
+			int exitCode;
+			using (var process = new Process())
+			{
+				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				{
+					UseShellExecute = false,
+					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+					RedirectStandardInput = true,
+					RedirectStandardOutput = true,
+					Arguments = String.Format(
+						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
+						"",
+						"",
+						this._settings.GitBranchName)
+				};
+				process.StartInfo = psi;
+				process.Start();
+
+				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
+			}
+
+			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+			return exitCode;
+		}
+
+		/// <summary>
+		/// Generates the list of SQL scripts for synchronization.
+		/// </summary>
+		/// <returns>Returns exit code. For successful execution will return 0.</returns>
+		public int GenerateScripts()
+		{
+			var processName = Convert.ToString(MsSqlAction.GenerateScripts);
+			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
+
+			int exitCode;
+			using (var process = new Process())
+			{
+				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				{
+					UseShellExecute = false,
+					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+					RedirectStandardInput = true,
+					RedirectStandardOutput = true,
+					Arguments = String.Format(
+						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
+						"",
+						"",
+						this._settings.GitBranchName)
+				};
+				process.StartInfo = psi;
+				process.Start();
+
+				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
+			}
+
+			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+			return exitCode;
+		}
+
+		/// <summary>
+		/// Cleanses the list of SQL scripts for synchronization.
+		/// </summary>
+		/// <returns>Returns exit code. For successful execution will return 0.</returns>
+		/// <remarks>As TableDiff.exe has a bug to handle NULL value, this cleansing process needs to be done.</remarks>
+		public int CleanseScripts()
+		{
+			var processName = Convert.ToString(MsSqlAction.CleanseScripts);
+			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
+
+			int exitCode;
+			using (var process = new Process())
+			{
+				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				{
+					UseShellExecute = false,
+					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+					RedirectStandardInput = true,
+					RedirectStandardOutput = true,
+					Arguments = String.Format(
+						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
+						"",
+						"",
+						this._settings.GitBranchName)
+				};
+				process.StartInfo = psi;
+				process.Start();
+
+				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
+			}
+
+			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+			return exitCode;
+		}
+
+		/// <summary>
+		/// Applies the list of SQL scripts for synchronization.
+		/// </summary>
+		/// <returns>Returns exit code. For successful execution will return 0.</returns>
+		public int ApplyDifferences()
+		{
+			var processName = Convert.ToString(MsSqlAction.ApplyDifferences);
+			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
+
+			int exitCode;
+			using (var process = new Process())
+			{
+				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				{
+					UseShellExecute = false,
+					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+					RedirectStandardInput = true,
+					RedirectStandardOutput = true,
+					Arguments = String.Format(
+						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
+						"",
+						"",
+						this._settings.GitBranchName)
+				};
+				process.StartInfo = psi;
+				process.Start();
+
+				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
+			}
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
 			return exitCode;

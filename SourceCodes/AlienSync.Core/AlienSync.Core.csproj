@@ -30,10 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.SqlServer.ManagedDTS, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Libraries\Microsoft.SqlServer.ManagedDTS\Microsoft.SqlServer.ManagedDTS.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -50,7 +46,7 @@
     <Compile Include="Configuration\DirectoryConfiguration.cs" />
     <Compile Include="Configuration\DirectoryElement.cs" />
     <Compile Include="Configuration\DirectoryElementCollection.cs" />
-    <Compile Include="Enums\Database.cs" />
+    <Compile Include="Enums\MsSqlAction.cs" />
     <Compile Include="Enums\RepositoryAction.cs" />
     <Compile Include="Enums\SynchronizationAction.cs" />
     <Compile Include="Events\ProcessStartedEventArgs.cs" />
@@ -59,7 +55,6 @@
     <Compile Include="Events\ResultCodeReceivedEventArgs.cs" />
     <Compile Include="Events\DirectorySynchronizationCompletedEventArgs.cs" />
     <Compile Include="Events\DirectorySynchronizationStartedEventArgs.cs" />
-    <Compile Include="Events\SsisPackageEventListener.cs" />
     <Compile Include="Events\SynchronizationCompletedEventArgs.cs" />
     <Compile Include="Events\SynchronizationStartedEventArgs.cs" />
     <Compile Include="Exceptions\InvalidConfigurationException.cs" />

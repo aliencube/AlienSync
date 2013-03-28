@@ -74,17 +74,17 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Gets the value that specifies whether SSIS package exists or not.
 		/// </summary>
-		public bool SsisPackageExists
+		public bool MsSqlCommandInstalled
 		{
-			get { return File.Exists(this.Settings.SsisPackagePath); }
+			get { return File.Exists(this.Settings.MsSqlCommandExecutablePath); }
 		}
 
 		/// <summary>
 		/// Gets the value that specifies whether TableDiff is installed or not.
 		/// </summary>
-		public bool TableDiffInstalled
+		public bool MsSqlTableDiffInstalled
 		{
-			get { return File.Exists(this.Settings.TableDiffExecutablePath); }
+			get { return File.Exists(this.Settings.MsSqlTableDiffExecutablePath); }
 		}
 		#endregion
 
@@ -187,33 +187,33 @@ namespace AlienSync.Core
 			if (!this.GitInstalled)
 				throw new FileNotFoundException("Git cannot be found at the designated location.");
 
-			var repo = new GitWrapper(this.Settings);
-			repo.ProcessStarted += Repo_ProcessStarted;
-			repo.ProcessCompleted += Repo_ProcessCompleted;
-			repo.OutputDataReceived += Repo_OutputDataReceived;
+			var git = new GitWrapper(this.Settings);
+			git.ProcessStarted += Wrapper_ProcessStarted;
+			git.ProcessCompleted += Wrapper_ProcessCompleted;
+			git.OutputDataReceived += Wrapper_OutputDataReceived;
 
-			var pulled = repo.Pull();
+			var pulled = git.Pull();
 			if (pulled > 0)
 			{
 				this.OnGitSynchronizationCompleted();
 				return;
 			}
 
-			var added = repo.Add();
+			var added = git.Add();
 			if (added > 0)
 			{
 				this.OnGitSynchronizationCompleted();
 				return;
 			}
 
-			var commited = repo.Commit();
+			var commited = git.Commit();
 			if (commited > 0)
 			{
 				this.OnGitSynchronizationCompleted();
 				return;
 			}
 
-			var pushed = repo.Push();
+			var pushed = git.Push();
 			this.OnGitSynchronizationCompleted();
 		}
 
@@ -232,20 +232,48 @@ namespace AlienSync.Core
 		{
 			this.OnMsSqlSynchronizationStarted();
 
-			//	Checks whether SSIS package exists or not.
-			if (!this.SsisPackageExists)
-				throw new FileNotFoundException("SSIS package cannot be found at the designated location.");
+			//	Checks whether MS-SQL command has been installed or not.
+			if (!this.MsSqlCommandInstalled)
+				throw new FileNotFoundException("SQLCMD.exe cannot be found at the designated location.");
 
 			//	Checks whether TableDiff has been installed or not.
-			if (!this.TableDiffInstalled)
-				throw new FileNotFoundException("TableDiff cannot be found at the designated location.");
+			if (!this.MsSqlTableDiffInstalled)
+				throw new FileNotFoundException("TableDiff.exe cannot be found at the designated location.");
 
-			var package = new MsSqlSsisPackageWrapper(this.Settings);
-			package.ProcessStarted += Package_ProcessStarted;
-			package.ProcessCompleted += Package_ProcessCompleted;
-			//package.OutputDataReceived += Package_OutputDataReceived;
+			var wrapper = new MsSqlWrapper(this.Settings);
+			wrapper.ProcessStarted += Wrapper_ProcessStarted;
+			wrapper.ProcessCompleted += Wrapper_ProcessCompleted;
+			wrapper.OutputDataReceived += Wrapper_OutputDataReceived;
 
-			package.Execute();
+			var directoryCleanedUp = wrapper.CleanUpDirectory();
+			if (directoryCleanedUp > 0)
+			{
+				this.OnMsSqlSynchronizationCompleted();
+				return;
+			}
+
+			var tablesGot = wrapper.GetTables();
+			if (tablesGot > 0)
+			{
+				this.OnMsSqlSynchronizationCompleted();
+				return;
+			}
+
+			var scriptsGenerated = wrapper.GenerateScripts();
+			if (scriptsGenerated > 0)
+			{
+				this.OnMsSqlSynchronizationCompleted();
+				return;
+			}
+
+			var scriptsCleansed = wrapper.CleanseScripts();
+			if (scriptsCleansed > 0)
+			{
+				this.OnMsSqlSynchronizationCompleted();
+				return;
+			}
+
+			var differencesApplied = wrapper.ApplyDifferences();
 			this.OnMsSqlSynchronizationCompleted();
 		}
 
@@ -459,39 +487,6 @@ namespace AlienSync.Core
 		}
 
 		/// <summary>
-		/// Occurs when the process is started.
-		/// </summary>
-		/// <param name="sender">Object that triggers the process started event.</param>
-		/// <param name="e">Provides data for process started event.</param>
-		protected void Repo_ProcessStarted(object sender, ProcessStartedEventArgs e)
-		{
-			if (this.ProcessStarted != null)
-				this.ProcessStarted(this, e);
-		}
-
-		/// <summary>
-		/// Occurs when the process is completed.
-		/// </summary>
-		/// <param name="sender">Object that triggers the process started event.</param>
-		/// <param name="e">Provides data for process completed event.</param>
-		protected void Repo_ProcessCompleted(object sender, ProcessCompletedEventArgs e)
-		{
-			if (this.ProcessCompleted != null)
-				this.ProcessCompleted(this, e);
-		}
-
-		/// <summary>
-		/// Occurs when the instance receives output stream.
-		/// </summary>
-		/// <param name="sender">Object that triggers the output data received event.</param>
-		/// <param name="e">Provides data for output data received event.</param>
-		protected void Repo_OutputDataReceived(object sender, AlienSync.Core.Events.OutputDataReceivedEventArgs e)
-		{
-			if (this.OutputDataReceived != null)
-				this.OutputDataReceived(sender, e);
-		}
-
-		/// <summary>
 		/// Occurs when MS-SQL synchronization process is started.
 		/// </summary>
 		protected virtual void OnMsSqlSynchronizationStarted()
@@ -514,7 +509,7 @@ namespace AlienSync.Core
 		/// </summary>
 		/// <param name="sender">Object that triggers the process started event.</param>
 		/// <param name="e">Provides data for process started event.</param>
-		protected void Package_ProcessStarted(object sender, ProcessStartedEventArgs e)
+		protected void Wrapper_ProcessStarted(object sender, ProcessStartedEventArgs e)
 		{
 			if (this.ProcessStarted != null)
 				this.ProcessStarted(this, e);
@@ -525,7 +520,7 @@ namespace AlienSync.Core
 		/// </summary>
 		/// <param name="sender">Object that triggers the process started event.</param>
 		/// <param name="e">Provides data for process completed event.</param>
-		protected void Package_ProcessCompleted(object sender, ProcessCompletedEventArgs e)
+		protected void Wrapper_ProcessCompleted(object sender, ProcessCompletedEventArgs e)
 		{
 			if (this.ProcessCompleted != null)
 				this.ProcessCompleted(this, e);
@@ -536,7 +531,7 @@ namespace AlienSync.Core
 		/// </summary>
 		/// <param name="sender">Object that triggers the output data received event.</param>
 		/// <param name="e">Provides data for output data received event.</param>
-		protected void Package_OutputDataReceived(object sender, AlienSync.Core.Events.OutputDataReceivedEventArgs e)
+		protected void Wrapper_OutputDataReceived(object sender, AlienSync.Core.Events.OutputDataReceivedEventArgs e)
 		{
 			if (this.OutputDataReceived != null)
 				this.OutputDataReceived(sender, e);
