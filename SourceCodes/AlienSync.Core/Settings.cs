@@ -4,8 +4,10 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web.Script.Serialization;
 using WinSCP;
 using AlienSync.Core.Configuration;
+using AlienSync.Core.Connections;
 using AlienSync.Core.Exceptions;
 
 namespace AlienSync.Core
@@ -298,7 +300,7 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Gets the connection details for MS-SQL source database.
 		/// </summary>
-		public Dictionary<string, string> MsSqlSourceConnection
+		public DatabaseConnection MsSqlSourceConnection
 		{
 			get { return this.GetMsSqlConnection("MsSqlSourceConnection"); }
 		}
@@ -306,7 +308,7 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Gets the connection details for MS-SQL destination database.
 		/// </summary>
-		public Dictionary<string, string> MsSqlDestinationConnection
+		public DatabaseConnection MsSqlDestinationConnection
 		{
 			get { return this.GetMsSqlConnection("MsSqlDestinationConnection"); }
 		}
@@ -370,6 +372,33 @@ namespace AlienSync.Core
 			}
 		}
 
+		/// <summary>
+		/// Gets the database schema for the source database. Default value is "dbo".
+		/// </summary>
+		public string MsSqlSourceDatabaseSchema
+		{
+			get
+			{
+				var schema = ConfigurationManager.AppSettings["MsSql.SourceDatabaseSchema"];
+				if (String.IsNullOrEmpty(schema))
+					schema = "dbo";
+				return schema;
+			}
+		}
+
+		/// <summary>
+		/// Gets the database schema for the destination database. Default value is "dbo"
+		/// </summary>
+		public string MsSqlDestinationDatabaseSchema
+		{
+			get
+			{
+				var schema = ConfigurationManager.AppSettings["MsSql.DestinationDatabaseSchema"];
+				if (String.IsNullOrEmpty(schema))
+					schema = "dbo";
+				return schema;
+			}
+		}
 		#endregion
 
 		#endregion
@@ -402,16 +431,18 @@ namespace AlienSync.Core
 		/// </summary>
 		/// <param name="name">Connectionstring key.</param>
 		/// <returns>Returns the collection of the connection etails for MS-SQL database.</returns>
-		private Dictionary<string, string> GetMsSqlConnection(string name)
+		private DatabaseConnection GetMsSqlConnection(string name)
 		{
-			var connection = ConfigurationManager.AppSettings[name];
-			if (String.IsNullOrEmpty(connection))
+			var connectionString = ConfigurationManager.AppSettings[name];
+			if (String.IsNullOrEmpty(connectionString))
 				throw new InvalidConfigurationException("A valid connection string doesn't exist.");
 
-			var collection = connection.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries)
+			var collection = connectionString.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries)
 									   .ToDictionary(p => p.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(" ", ""),
 													 p => p.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries)[1]);
-			return collection;
+			var serialiser = new JavaScriptSerializer();
+			var connection = serialiser.Deserialize<DatabaseConnection>(serialiser.Serialize(collection));
+			return connection;
 		}
 		#endregion
 	}

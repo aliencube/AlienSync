@@ -33,6 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,6 +47,7 @@
     <Compile Include="Configuration\DirectoryConfiguration.cs" />
     <Compile Include="Configuration\DirectoryElement.cs" />
     <Compile Include="Configuration\DirectoryElementCollection.cs" />
+    <Compile Include="Connections\DatabaseConnection.cs" />
     <Compile Include="Enums\MsSqlAction.cs" />
     <Compile Include="Enums\RepositoryAction.cs" />
     <Compile Include="Enums\SynchronizationAction.cs" />

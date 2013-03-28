@@ -39,13 +39,13 @@ namespace AlienSync.Core.Wrappers
 			using (var process = new Process())
 			{
 				var psi = new ProcessStartInfo("del")
-				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(@"{0}\*.* /q", this._settings.MsSqlScriptStoragePath)
-				};
+					{
+						UseShellExecute = false,
+						WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+						RedirectStandardInput = true,
+						RedirectStandardOutput = true,
+						Arguments = String.Format(@"{0}\*.* /q", this._settings.MsSqlScriptStoragePath)
+					};
 				process.StartInfo = psi;
 				process.Start();
 
@@ -71,18 +71,21 @@ namespace AlienSync.Core.Wrappers
 			int exitCode;
 			using (var process = new Process())
 			{
+				var query =
+					String.Format(
+						"SELECT t.[name] FROM sys.tables AS t JOIN sys.schemas AS s ON t.schema_id = s.schema_id WHERE s.[name] = '{0}' AND t.[name] <> 'sysdiagrams' ORDER BY t.[name] ASC",
+						this._settings.MsSqlSourceDatabaseSchema);
 				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
-				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
-						"",
-						"",
-						this._settings.GitBranchName)
-				};
+					{
+						UseShellExecute = false,
+						WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+						RedirectStandardInput = true,
+						RedirectStandardOutput = true,
+						Arguments =
+							String.Format("-S localhost -U username -P password -d AlienSync_Source -Q \"{0}\" -o \"{1}\\tables.txt\"",
+							              query,
+							              this._settings.MsSqlScriptStoragePath)
+					};
 				process.StartInfo = psi;
 				process.Start();
 
