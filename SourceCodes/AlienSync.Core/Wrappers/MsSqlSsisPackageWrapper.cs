@@ -38,17 +38,13 @@ namespace AlienSync.Core.Wrappers
 			int exitCode;
 			using (var process = new Process())
 			{
-				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				var psi = new ProcessStartInfo("del")
 				{
 					UseShellExecute = false,
 					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
 					RedirectStandardInput = true,
 					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
-						"",
-						"",
-						this._settings.GitBranchName)
+					Arguments = String.Format(@"{0}\*.* /q", this._settings.MsSqlScriptStoragePath)
 				};
 				process.StartInfo = psi;
 				process.Start();

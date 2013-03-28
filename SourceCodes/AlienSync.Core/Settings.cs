@@ -70,7 +70,7 @@ namespace AlienSync.Core
 				if (String.IsNullOrEmpty(path))
 					path = @"\logs";
 				var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-				if (directory != null)
+				if (!String.IsNullOrEmpty(directory))
 					path = String.Format("{0}{1}", directory.TrimEnd('/', '\\'), path.TrimEnd('/', '\\'));
 				return path;
 			}
@@ -361,9 +361,12 @@ namespace AlienSync.Core
 			get
 			{
 				var path = ConfigurationManager.AppSettings["MsSql.ScriptStoragePath"];
-				if (!Directory.Exists(path))
-					path = String.Empty;
-				return path.TrimEnd('/', '\\');
+				if (String.IsNullOrEmpty(path))
+					path = @"\results";
+				var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+				if (!String.IsNullOrEmpty(directory))
+					path = String.Format("{0}{1}", directory.TrimEnd('/', '\\'), path.TrimEnd('/', '\\'));
+				return path;
 			}
 		}
 
