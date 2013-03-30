@@ -266,13 +266,6 @@ namespace AlienSync.Core
 				return;
 			}
 
-			var scriptsCleansed = wrapper.CleanseScripts();
-			if (scriptsCleansed > 0)
-			{
-				this.OnMsSqlSynchronizationCompleted();
-				return;
-			}
-
 			var differencesApplied = wrapper.ApplyDifferences();
 			this.OnMsSqlSynchronizationCompleted();
 		}

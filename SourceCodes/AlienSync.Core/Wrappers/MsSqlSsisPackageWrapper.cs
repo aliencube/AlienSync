@@ -125,11 +125,15 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(MsSqlAction.GenerateScripts);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
+			//	Sets the exitcode 404, if no table name exists.
 			var exitCode = 404;
 			if (this._tableNames != null && this._tableNames.Any())
 			{
 				foreach (var tableName in this._tableNames)
 				{
+					this.OnProcessStarted(new ProcessStartedEventArgs(String.Format("{0} - {1}", processName, tableName)));
+
+					var filename = String.Format(@"{0}\{1}.sql", this._settings.MsSqlScriptStoragePath, tableName);
 					using (var process = new Process())
 					{
 						var psi = new ProcessStartInfo(this._settings.MsSqlTableDiffExecutablePath)
@@ -139,7 +143,7 @@ namespace AlienSync.Core.Wrappers
 								RedirectStandardInput = true,
 								RedirectStandardOutput = true,
 								Arguments = String.Format(
-									"-sourceserver [{0}] -sourcedatabase [{1}] -sourceschema [{2}] -sourcetable [{3}] -sourceuser [{4}] -sourcepassword [{5}] -destinationserver [{6}] -destinationdatabase [{7}] -destinationschema [{8}] -destinationtable [{9}] -destinationuser [{10}] -destinationpassword [{11}] -dt -et {12} -f \"{13}\\{14}.sql\"",
+									"-sourceserver [{0}] -sourcedatabase [{1}] -sourceschema [{2}] -sourcetable [{3}] -sourceuser [{4}] -sourcepassword [{5}] -destinationserver [{6}] -destinationdatabase [{7}] -destinationschema [{8}] -destinationtable [{9}] -destinationuser [{10}] -destinationpassword [{11}] -dt -et {12} -f \"{13}\"",
 									this._settings.MsSqlSourceConnection.DataSource,
 									this._settings.MsSqlSourceConnection.InitialCatalog,
 									this._settings.MsSqlSourceDatabaseSchema,
@@ -153,8 +157,7 @@ namespace AlienSync.Core.Wrappers
 									this._settings.MsSqlDestinationConnection.UserId,
 									this._settings.MsSqlDestinationConnection.Password,
 									"TableDiffs",
-									this._settings.MsSqlScriptStoragePath,
-									tableName)
+									filename)
 							};
 						process.StartInfo = psi;
 						process.Start();
@@ -164,6 +167,11 @@ namespace AlienSync.Core.Wrappers
 						process.WaitForExit();
 						exitCode = process.ExitCode;
 					}
+
+					if (File.Exists(filename))
+						this.CleanseScript(filename);
+
+					this.OnProcessCompleted(new ProcessCompletedEventArgs(String.Format("{0} - {1}", processName, tableName), exitCode));
 					if (exitCode > 0)
 						break;
 				}
@@ -174,41 +182,18 @@ namespace AlienSync.Core.Wrappers
 		}
 
 		/// <summary>
-		/// Cleanses the list of SQL scripts for synchronization.
+		/// Cleanses the SQL script file for synchronization.
 		/// </summary>
-		/// <returns>Returns exit code. For successful execution will return 0.</returns>
+		/// <param name="filepath">Full path of the filename to be cleansed.</param>
 		/// <remarks>As TableDiff.exe has a bug to handle NULL value, this cleansing process needs to be done.</remarks>
-		public int CleanseScripts()
+		private void CleanseScript(string filepath)
 		{
-			var processName = Convert.ToString(MsSqlAction.CleanseScripts);
-			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
-
-			int exitCode;
-			using (var process = new Process())
+			string data;
+			using (var file = File.OpenText(filepath))
 			{
-				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
-				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
-						"",
-						"",
-						this._settings.GitBranchName)
-				};
-				process.StartInfo = psi;
-				process.Start();
-
-				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
-
-				process.WaitForExit();
-				exitCode = process.ExitCode;
+				data = file.ReadToEnd().Replace("N'Null'", "Null");
 			}
-
-			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
-			return exitCode;
+			File.WriteAllText(filepath, data);
 		}
 
 		/// <summary>
