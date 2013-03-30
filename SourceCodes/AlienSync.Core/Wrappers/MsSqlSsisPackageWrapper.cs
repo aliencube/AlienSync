@@ -106,8 +106,8 @@ namespace AlienSync.Core.Wrappers
 			{
 				var lines = file.ReadToEnd()
 				                .Split(new string[] {"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries)
-				                .Skip(2)
 				                .Where(p => !p.StartsWith("("))
+				                .Skip(2)
 				                .ToList();
 				this._tableNames = lines;
 			}
@@ -125,56 +125,58 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(MsSqlAction.GenerateScripts);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
-			//	Sets the exitcode 404, if no table name exists.
-			var exitCode = 404;
-			if (this._tableNames != null && this._tableNames.Any())
+			var exitCode = 0;
+			if (this._tableNames == null || !this._tableNames.Any())
 			{
-				foreach (var tableName in this._tableNames)
+				//	Sets the exitcode 404, if no table name exists.
+				exitCode = 404;
+				this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+				return exitCode;
+			}
+
+			foreach (var tableName in this._tableNames)
+			{
+				this.OnProcessStarted(new ProcessStartedEventArgs(String.Format("{0} - {1}", processName, tableName)));
+
+				var filename = String.Format(@"{0}\{1}.sql", this._settings.MsSqlScriptStoragePath, tableName);
+				using (var process = new Process())
 				{
-					this.OnProcessStarted(new ProcessStartedEventArgs(String.Format("{0} - {1}", processName, tableName)));
+					var psi = new ProcessStartInfo(this._settings.MsSqlTableDiffExecutablePath)
+						{
+							UseShellExecute = false,
+							WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+							RedirectStandardInput = true,
+							RedirectStandardOutput = true,
+							Arguments = String.Format(
+								"-sourceserver [{0}] -sourcedatabase [{1}] -sourceschema [{2}] -sourcetable [{3}] -sourceuser [{4}] -sourcepassword [{5}] -destinationserver [{6}] -destinationdatabase [{7}] -destinationschema [{8}] -destinationtable [{9}] -destinationuser [{10}] -destinationpassword [{11}] -dt -et {12} -f \"{13}\"",
+								this._settings.MsSqlSourceConnection.DataSource,
+								this._settings.MsSqlSourceConnection.InitialCatalog,
+								this._settings.MsSqlSourceDatabaseSchema,
+								tableName,
+								this._settings.MsSqlSourceConnection.UserId,
+								this._settings.MsSqlSourceConnection.Password,
+								this._settings.MsSqlDestinationConnection.DataSource,
+								this._settings.MsSqlDestinationConnection.InitialCatalog,
+								this._settings.MsSqlDestinationDatabaseSchema,
+								tableName,
+								this._settings.MsSqlDestinationConnection.UserId,
+								this._settings.MsSqlDestinationConnection.Password,
+								"TableDiffs",
+								filename)
+						};
+					process.StartInfo = psi;
+					process.Start();
 
-					var filename = String.Format(@"{0}\{1}.sql", this._settings.MsSqlScriptStoragePath, tableName);
-					using (var process = new Process())
-					{
-						var psi = new ProcessStartInfo(this._settings.MsSqlTableDiffExecutablePath)
-							{
-								UseShellExecute = false,
-								WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-								RedirectStandardInput = true,
-								RedirectStandardOutput = true,
-								Arguments = String.Format(
-									"-sourceserver [{0}] -sourcedatabase [{1}] -sourceschema [{2}] -sourcetable [{3}] -sourceuser [{4}] -sourcepassword [{5}] -destinationserver [{6}] -destinationdatabase [{7}] -destinationschema [{8}] -destinationtable [{9}] -destinationuser [{10}] -destinationpassword [{11}] -dt -et {12} -f \"{13}\"",
-									this._settings.MsSqlSourceConnection.DataSource,
-									this._settings.MsSqlSourceConnection.InitialCatalog,
-									this._settings.MsSqlSourceDatabaseSchema,
-									tableName,
-									this._settings.MsSqlSourceConnection.UserId,
-									this._settings.MsSqlSourceConnection.Password,
-									this._settings.MsSqlDestinationConnection.DataSource,
-									this._settings.MsSqlDestinationConnection.InitialCatalog,
-									this._settings.MsSqlDestinationDatabaseSchema,
-									tableName,
-									this._settings.MsSqlDestinationConnection.UserId,
-									this._settings.MsSqlDestinationConnection.Password,
-									"TableDiffs",
-									filename)
-							};
-						process.StartInfo = psi;
-						process.Start();
+					this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
 
-						this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
-
-						process.WaitForExit();
-						exitCode = process.ExitCode;
-					}
-
-					if (File.Exists(filename))
-						this.CleanseScript(filename);
-
-					this.OnProcessCompleted(new ProcessCompletedEventArgs(String.Format("{0} - {1}", processName, tableName), exitCode));
-					if (exitCode > 0)
-						break;
+					process.WaitForExit();
+					exitCode = process.ExitCode;
 				}
+
+				if (File.Exists(filename))
+					this.CleanseScript(filename);
+
+				this.OnProcessCompleted(new ProcessCompletedEventArgs(String.Format("{0} - {1}", processName, tableName), exitCode));
 			}
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
@@ -205,33 +207,56 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(MsSqlAction.ApplyDifferences);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
-			int exitCode;
-			using (var process = new Process())
+			var exitCode = 0;
+			var files = Directory.GetFiles(this._settings.MsSqlScriptStoragePath, "*.sql");
+			if (!files.Any())
 			{
-				var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+				//	Sets the exitcode 404, if no filename exists.
+				exitCode = 404;
+				this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
+				return exitCode;
+			}
+
+			foreach (var filename in files)
+			{
+				this.OnProcessStarted(new ProcessStartedEventArgs(String.Format("{0} - {1}", processName, filename)));
+
+				using (var process = new Process())
 				{
-					UseShellExecute = false,
-					WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					Arguments = String.Format(
-						"--git-dir={0} --work-tree={1} pull -v --progress \"origin\" {2}",
-						"",
-						"",
-						this._settings.GitBranchName)
-				};
-				process.StartInfo = psi;
-				process.Start();
+					var psi = new ProcessStartInfo(this._settings.MsSqlCommandExecutablePath)
+						{
+							UseShellExecute = false,
+							WorkingDirectory = this._settings.MsSqlScriptStoragePath,
+							RedirectStandardInput = true,
+							RedirectStandardOutput = true,
+							Arguments = String.Format(
+								"-S {0} -U {1} -P {2} -d {3} -i \"{4}\"",
+								this._settings.MsSqlDestinationConnection.DataSource,
+								this._settings.MsSqlDestinationConnection.UserId,
+								this._settings.MsSqlDestinationConnection.Password,
+								this._settings.MsSqlDestinationConnection.InitialCatalog,
+								filename)
+						};
+					process.StartInfo = psi;
+					process.Start();
 
-				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
+					this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
 
-				process.WaitForExit();
-				exitCode = process.ExitCode;
+					process.WaitForExit();
+					exitCode = process.ExitCode;
+				}
+
+				this.OnProcessCompleted(new ProcessCompletedEventArgs(String.Format("{0} - {1}", processName, filename), exitCode));
+				if (exitCode > 0)
+					break;
+
+				File.Delete(filename);
 			}
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
 			return exitCode;
 		}
+
 		#endregion
 
 		#region Events
