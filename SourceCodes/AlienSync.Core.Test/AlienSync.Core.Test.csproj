@@ -54,6 +54,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AppConfigTest.cs" />
+    <Compile Include="MsSqlSsisWrapperTest.cs" />
     <Compile Include="SettingsTest.cs" />
     <Compile Include="GitWrapperTest.cs" />
     <Compile Include="SynchronizerTest.cs" />

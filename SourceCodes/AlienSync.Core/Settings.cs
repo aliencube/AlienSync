@@ -4,8 +4,11 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web.Script.Serialization;
 using WinSCP;
 using AlienSync.Core.Configuration;
+using AlienSync.Core.Connections;
+using AlienSync.Core.Exceptions;
 
 namespace AlienSync.Core
 {
@@ -69,7 +72,7 @@ namespace AlienSync.Core
 				if (String.IsNullOrEmpty(path))
 					path = @"\logs";
 				var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-				if (directory != null)
+				if (!String.IsNullOrEmpty(directory))
 					path = String.Format("{0}{1}", directory.TrimEnd('/', '\\'), path.TrimEnd('/', '\\'));
 				return path;
 			}
@@ -293,6 +296,111 @@ namespace AlienSync.Core
 		
 		#endregion
 
+		#region For MS-SQL
+		/// <summary>
+		/// Gets the connection details for MS-SQL source database.
+		/// </summary>
+		public DatabaseConnection MsSqlSourceConnection
+		{
+			get { return this.GetMsSqlConnection("MsSqlSourceConnection"); }
+		}
+
+		/// <summary>
+		/// Gets the connection details for MS-SQL destination database.
+		/// </summary>
+		public DatabaseConnection MsSqlDestinationConnection
+		{
+			get { return this.GetMsSqlConnection("MsSqlDestinationConnection"); }
+		}
+
+		/// <summary>
+		/// Gets the executable path of MS-SQL SQLCMD.exe.
+		/// </summary>
+		public string MsSqlCommandExecutablePath
+		{
+			get
+			{
+				var path = ConfigurationManager.AppSettings["MsSql.CommandExecutablePath"];
+				if (String.IsNullOrEmpty(path))
+				{
+					path = @"C:\Program Files\Microsoft SQL Server\110\Tools\Binn";
+					if (!Directory.Exists(path))
+						path = @"C:\Program Files\Microsoft SQL Server\100\Tools\Binn";
+				}
+				if (!path.ToLower().EndsWith("sqlcmd.exe"))
+					path = String.Format(@"{0}\sqlcmd.exe", path.TrimEnd('/', '\\'));
+				return path;
+			}
+		}
+
+		/// <summary>
+		/// Gets the executable path of TableDiff.exe.
+		/// </summary>
+		public string MsSqlTableDiffExecutablePath
+		{
+			get
+			{
+				var path = ConfigurationManager.AppSettings["MsSql.TableDiffExecutablePath"];
+				if (String.IsNullOrEmpty(path))
+				{
+					//	Sets the version of MS-SQL Server 2012.
+					path = @"C:\Program Files\Microsoft SQL Server\110\COM";
+					//	Sets the version of MS-SQL Server 2008.
+					if (!Directory.Exists(path))
+						path = @"C:\Program Files\Microsoft SQL Server\100\COM";
+				}
+				if (!path.ToLower().EndsWith("tablediff.exe"))
+					path = String.Format(@"{0}\tablediff.exe", path.TrimEnd('/', '\\'));
+				return path;
+			}
+		}
+
+		/// <summary>
+		/// Gets the storage path to store TableDiff results.
+		/// </summary>
+		public string MsSqlScriptStoragePath
+		{
+			get
+			{
+				var path = ConfigurationManager.AppSettings["MsSql.ScriptStoragePath"];
+				if (String.IsNullOrEmpty(path))
+					path = @"\results";
+				var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+				if (!String.IsNullOrEmpty(directory))
+					path = String.Format("{0}{1}", directory.TrimEnd('/', '\\'), path.TrimEnd('/', '\\'));
+				return path;
+			}
+		}
+
+		/// <summary>
+		/// Gets the database schema for the source database. Default value is "dbo".
+		/// </summary>
+		public string MsSqlSourceDatabaseSchema
+		{
+			get
+			{
+				var schema = ConfigurationManager.AppSettings["MsSql.SourceDatabaseSchema"];
+				if (String.IsNullOrEmpty(schema))
+					schema = "dbo";
+				return schema;
+			}
+		}
+
+		/// <summary>
+		/// Gets the database schema for the destination database. Default value is "dbo"
+		/// </summary>
+		public string MsSqlDestinationDatabaseSchema
+		{
+			get
+			{
+				var schema = ConfigurationManager.AppSettings["MsSql.DestinationDatabaseSchema"];
+				if (String.IsNullOrEmpty(schema))
+					schema = "dbo";
+				return schema;
+			}
+		}
+		#endregion
+
 		#endregion
 
 		#region Methods
@@ -318,6 +426,27 @@ namespace AlienSync.Core
 			return value;
 		}
 
+		/// <summary>
+		/// Gets the collection of the connection details for MS-SQL database.
+		/// </summary>
+		/// <param name="name">Connectionstring key.</param>
+		/// <returns>Returns the collection of the connection etails for MS-SQL database.</returns>
+		private DatabaseConnection GetMsSqlConnection(string name)
+		{
+			if (!this.ConnectionStrings.ContainsKey(name))
+				throw new InvalidConfigurationException(String.Format("A connection string for {0} doesn't exist.", name));
+
+			var connectionString = this.ConnectionStrings[name];
+			if (String.IsNullOrEmpty(connectionString))
+				throw new InvalidConfigurationException(String.Format("A valid connection string for {0} doesn't exist.", name));
+
+			var collection = connectionString.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries)
+									   .ToDictionary(p => p.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(" ", ""),
+													 p => p.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries)[1]);
+			var serialiser = new JavaScriptSerializer();
+			var connection = serialiser.Deserialize<DatabaseConnection>(serialiser.Serialize(collection));
+			return connection;
+		}
 		#endregion
 	}
 }
