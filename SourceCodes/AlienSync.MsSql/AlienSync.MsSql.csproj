@@ -105,6 +105,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
+  <PropertyGroup>
+    <PostBuildEvent>IF NOT EXIST "$(SolutionDir)..\Build\$(TargetName)\" MD "$(SolutionDir)..\Build\$(TargetName)\"
+XCOPY "$(TargetDir)$(TargetName).exe" "$(SolutionDir)..\Build\$(TargetName)\" /e /y
+XCOPY "$(TargetDir)$(TargetName).exe.config" "$(SolutionDir)..\Build\$(TargetName)\" /e /y
+XCOPY "$(TargetDir)*.dll" "$(SolutionDir)..\Build\$(TargetName)\" /e /y
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
