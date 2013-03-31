@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 
@@ -13,6 +14,12 @@ namespace AlienSync.Core.Wrappers
 	/// </summary>
 	public class MsSqlWrapper
 	{
+		#region Constants
+		private const string FK_OFF = "EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\"";
+		private const string FK_ON = "EXEC sp_msforeachtable \"ALTER TABLE ? WITH CHECK  CHECK CONSTRAINT all\"";
+		#endregion
+
+
 		#region Constructors
 		/// <summary>
 		/// Initialises a new instance of the MsSqlWrapper object.
@@ -39,25 +46,12 @@ namespace AlienSync.Core.Wrappers
 			var processName = Convert.ToString(MsSqlAction.CleanUpDirectory);
 			this.OnProcessStarted(new ProcessStartedEventArgs(processName));
 
-			int exitCode;
-			using (var process = new Process())
-			{
-				var psi = new ProcessStartInfo("del")
-					{
-						UseShellExecute = false,
-						WorkingDirectory = this._settings.MsSqlScriptStoragePath,
-						RedirectStandardInput = true,
-						RedirectStandardOutput = true,
-						Arguments = String.Format(@"{0}\*.* /q", this._settings.MsSqlScriptStoragePath)
-					};
-				process.StartInfo = psi;
-				process.Start();
+			var exitCode = 0;
+			if (!Directory.Exists(this._settings.MsSqlScriptStoragePath))
+				Directory.CreateDirectory(this._settings.MsSqlScriptStoragePath);
 
-				this.OnOutputDataReceived(new OutputDataReceivedEventArgs(process.StandardOutput));
-
-				process.WaitForExit();
-				exitCode = process.ExitCode;
-			}
+			foreach (var filename in Directory.GetFiles(this._settings.MsSqlScriptStoragePath))
+				File.Delete(filename);
 
 			this.OnProcessCompleted(new ProcessCompletedEventArgs(processName, exitCode));
 			return exitCode;
@@ -108,6 +102,7 @@ namespace AlienSync.Core.Wrappers
 				                .Split(new string[] {"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries)
 				                .Where(p => !p.StartsWith("("))
 				                .Skip(2)
+				                .Select(p => p.Trim())
 				                .ToList();
 				this._tableNames = lines;
 			}
@@ -190,12 +185,17 @@ namespace AlienSync.Core.Wrappers
 		/// <remarks>As TableDiff.exe has a bug to handle NULL value, this cleansing process needs to be done.</remarks>
 		private void CleanseScript(string filepath)
 		{
-			string data;
+			var sb = new StringBuilder();
 			using (var file = File.OpenText(filepath))
 			{
-				data = file.ReadToEnd().Replace("N'Null'", "Null");
+				var data = file.ReadToEnd().Replace("N'Null'", "Null");
+				sb.AppendLine(FK_OFF);
+				sb.AppendLine("GO");
+				sb.AppendLine(data);
+				sb.AppendLine(FK_ON);
+				sb.AppendLine("GO");
 			}
-			File.WriteAllText(filepath, data);
+			File.WriteAllText(filepath, sb.ToString());
 		}
 
 		/// <summary>

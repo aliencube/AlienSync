@@ -269,7 +269,7 @@ namespace AlienSync.Core
 			}
 
 			var scriptsGenerated = wrapper.GenerateScripts();
-			if (scriptsGenerated > 0)
+			if (scriptsGenerated > 2)
 			{
 				this.OnMsSqlSynchronizationCompleted();
 				return;
