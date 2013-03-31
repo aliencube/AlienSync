@@ -94,7 +94,7 @@ namespace AlienSync.Git
 		/// <param name="args">List of parameters manually set.</param>
 		private static void ProcessRequests(string[] args)
 		{
-			var sync = new Synchronizer(args);
+			var sync = new Synchronizer(args, SynchronizationAction.ScpThenGit);
 			sync.SynchronizationStarted += Sync_SynchronizationStarted;
 			sync.SynchronizationCompleted += Sync_SynchronizationCompleted;
 
@@ -112,7 +112,7 @@ namespace AlienSync.Git
 			sync.ProcessCompleted += Sync_ProcessCompleted;
 			sync.OutputDataReceived += Sync_OutputDataReceived;
 
-			sync.ProcessRequests(SynchronizationAction.ScpThenGit);
+			sync.ProcessRequests();
 		}
 		#endregion
 

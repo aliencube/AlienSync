@@ -94,7 +94,7 @@ namespace AlienSync.MsSql
 		/// <param name="args">List of parameters manually set.</param>
 		private static void ProcessRequests(string[] args)
 		{
-			var sync = new Synchronizer(args);
+			var sync = new Synchronizer(args, SynchronizationAction.MsSqlOnly);
 			sync.SynchronizationStarted += Sync_SynchronizationStarted;
 			sync.SynchronizationCompleted += Sync_SynchronizationCompleted;
 
@@ -104,7 +104,7 @@ namespace AlienSync.MsSql
 			sync.ProcessStarted += Sync_ProcessStarted;
 			sync.ProcessCompleted += Sync_ProcessCompleted;
 
-			sync.ProcessRequests(SynchronizationAction.MsSqlOnly);
+			sync.ProcessRequests();
 		}
 		#endregion
 

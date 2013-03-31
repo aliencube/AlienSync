@@ -17,15 +17,25 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Initialises a new instance of the Synchronizer object.
 		/// </summary>
-		/// <param name="args">List of parameters manually set.</param>
-		public Synchronizer(string[] args = null)
+		/// <param name="args">List of parameters manually set. Default value is NULL</param>
+		/// <param name="action">Synchronization action. Default value is <c>SynchronizationAction.ScpOnly</c>.</param>
+		public Synchronizer(string[] args = null, SynchronizationAction action = SynchronizationAction.ScpOnly)
 		{
-			this._parameters = new Parameters(args);
+			switch (action)
+			{
+				case SynchronizationAction.ScpOnly:
+				case SynchronizationAction.ScpThenGit:
+				case SynchronizationAction.ScpThenHg:
+					this._parameters = new Parameters(args);
+					break;
+			}
+			this._action = action;
 		}
 		#endregion
 
 		#region Properties
 		private readonly Parameters _parameters;
+		private readonly SynchronizationAction _action;
 
 		/// <summary>
 		/// Gets the session options.
@@ -92,13 +102,12 @@ namespace AlienSync.Core
 		/// <summary>
 		/// Processes the synchronization requests.
 		/// </summary>
-		/// <param name="action">Action for synchronization. Default value is <c>SynchronizationAction.ScpOnly</c>.</param>
-		public void ProcessRequests(SynchronizationAction action = SynchronizationAction.ScpOnly)
+		public void ProcessRequests()
 		{
 			//	Subscribes the SynchronizationStarted event.
 			this.OnSynchronizationStarted(new SynchronizationStartedEventArgs(DateTime.Now));
 
-			switch (action)
+			switch (this._action)
 			{
 				case SynchronizationAction.ScpOnly:
 					//	Processes the sync through WinSCP.
