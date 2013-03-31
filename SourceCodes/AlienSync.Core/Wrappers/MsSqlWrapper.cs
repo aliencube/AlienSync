@@ -18,8 +18,7 @@ namespace AlienSync.Core.Wrappers
 		private const string FK_OFF = "EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\"";
 		private const string FK_ON = "EXEC sp_msforeachtable \"ALTER TABLE ? WITH CHECK  CHECK CONSTRAINT all\"";
 		#endregion
-
-
+		
 		#region Constructors
 		/// <summary>
 		/// Initialises a new instance of the MsSqlWrapper object.

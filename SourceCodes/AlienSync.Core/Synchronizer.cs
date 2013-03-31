@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using AlienSync.Core.Enums;
 using WinSCP;
+using AlienSync.Core.Enums;
 using AlienSync.Core.Events;
 using AlienSync.Core.Wrappers;
 
