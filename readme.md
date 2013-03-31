@@ -1,6 +1,6 @@
 # AlienSync #
 
-This will help your team's source code repository up-to-date by synchronising the repository with a website where developers (either front-end or back-end) directly handle source files (mainly CSS, image and javascript files), who are not interested in a source code management system.
+This will help your team's source code repository up-to-date by synchronising the repository with a website where developers (either front-end or back-end) directly handle source files (mainly CSS, image and javascript files), who are not interested in a source code management system. In addition to the source code repository, this will help databases get synchronized.
 
 
 ## Prerequisites ##
@@ -25,6 +25,10 @@ This will help your team's source code repository up-to-date by synchronising th
 - [WinSCP](http://winscp.net/eng/download.php)
 - [Mercurial](http://mercurial.selenic.com/downloads)
 
+### AlienSync for MS-SQL ###
+
+- [MS-SQL Server 2008 or Express or later](http://www.microsoft.com/en-us/sqlserver/get-sql-server/try-it.aspx)
+
 
 ## Download Builds ##
 
@@ -33,7 +37,7 @@ Download pre-built applications are available at [BitBucket](https://bitbucket.o
 
 ## Getting Started ##
 
-In order to run any of **AlienSync**, a configuration file - `AlienSync.Scp.exe.config`, `AlienSync.Git.exe.config` or `AlienSync.Hg.exe.config` - needs to be setup beforehand.
+In order to run any of **AlienSync**, a configuration file - `AlienSync.Scp.exe.config`, `AlienSync.Git.exe.config`, `AlienSync.Hg.exe.config` or `AlienSync.MsSql.exe.config` - needs to be setup beforehand.
 
 
 ## AlienSync for SCP ##
@@ -51,6 +55,11 @@ Once you setup the configuration, simply run `AlienSync.Git.exe` and it will do 
 To be documented.
 
 
+## AlienSync for MS-SQL ##
+
+Once you setup the configuration, simply run `AlienSync.MsSql.exe` and it will do the rest for you.
+
+
 ## Documentation ##
 
 **AlienSync** is documented in this [wiki](https://github.com/aliencube/AlienSync/wiki) page.
@@ -62,6 +71,11 @@ Should you have any issue in regards to **AlienSync**, please raise it on this [
 
 
 ## Change History ##
+
+### 0.8.0.0 ###
+
+- MS-SQL Synchronization tool added
+- Existing codes optimized.
 
 ### 0.7.0.0 ###
 
