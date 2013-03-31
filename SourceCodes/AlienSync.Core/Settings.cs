@@ -433,9 +433,12 @@ namespace AlienSync.Core
 		/// <returns>Returns the collection of the connection etails for MS-SQL database.</returns>
 		private DatabaseConnection GetMsSqlConnection(string name)
 		{
-			var connectionString = ConfigurationManager.AppSettings[name];
+			if (!this.ConnectionStrings.ContainsKey(name))
+				throw new InvalidConfigurationException(String.Format("A connection string for {0} doesn't exist.", name));
+
+			var connectionString = this.ConnectionStrings[name];
 			if (String.IsNullOrEmpty(connectionString))
-				throw new InvalidConfigurationException("A valid connection string doesn't exist.");
+				throw new InvalidConfigurationException(String.Format("A valid connection string for {0} doesn't exist.", name));
 
 			var collection = connectionString.Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries)
 									   .ToDictionary(p => p.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(" ", ""),
