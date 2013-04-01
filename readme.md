@@ -40,22 +40,22 @@ Download pre-built applications are available at [BitBucket](https://bitbucket.o
 In order to run any of **AlienSync**, a configuration file - `AlienSync.Scp.exe.config`, `AlienSync.Git.exe.config`, `AlienSync.Hg.exe.config` or `AlienSync.MsSql.exe.config` - needs to be setup beforehand.
 
 
-## AlienSync for SCP ##
+### AlienSync for SCP ###
 
 Once you setup the configuration, simply run `AlienSync.Scp.exe` and it will do the rest for you.
 
 
-## AlienSync for Git ##
+### AlienSync for Git ###
 
 Once you setup the configuration, simply run `AlienSync.Git.exe` and it will do the rest for you. You might be asked to enter the password to access to the remote repository, if you use HTTP(S) connection for your repository. In order not to be prompted in this case, you should modify your `.git/config` file having your password, which is less secure.
 
 
-## AlienSync for Hg (To be implemented) ##
+### AlienSync for Hg (To be implemented) ###
 
 To be documented.
 
 
-## AlienSync for MS-SQL ##
+### AlienSync for MS-SQL ###
 
 Once you setup the configuration, simply run `AlienSync.MsSql.exe` and it will do the rest for you.
 
