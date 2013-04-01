@@ -1,6 +1,6 @@
 # AlienSync #
 
-This will help your team's source code repository up-to-date by synchronising the repository with a website where developers (either front-end or back-end) directly handle source files (mainly CSS, image and javascript files), who are not interested in a source code management system. In addition to the source code repository, this will help databases get synchronized.
+This will help your team's source code repository up-to-date by synchronising the repository with a website where developers (either front-end or back-end) directly handle source files (mainly CSS, image and javascript files), who are not interested in a source code management system. In addition to the source code repository synchronisation, this will also help databases get synchronised.
 
 
 ## Prerequisites ##
